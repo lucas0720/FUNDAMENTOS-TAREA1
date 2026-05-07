@@ -1,0 +1,6 @@
+k={q0}
+sigma={1}
+delta:
+(q0,1,q0)
+s=q0
+f={q0}

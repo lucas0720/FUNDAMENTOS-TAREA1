@@ -4,7 +4,7 @@ import java.util.*;
 
 import modelo.Automata;
 import modelo.Transicion;
-
+//INTENGAR JUTNAS RESTOCON EL CONVERITIDOR PORQUE ALFINAL SE TRARTA DE UN PROCESO
 public class Clausura {
 
     public static final String EPSILON = "epsilon"; // Constante para representar la transición epsilon
