@@ -103,3 +103,4 @@ public class Automata {
         return "Automata {\n" + "  Estados (K) = " + estados + "\n" + "  Alfabeto (Sigma) = " + alfabeto + "\n" + "  Estado Inicial (s) = '" + estadoInicial + "'\n" + "  Estados Finales (F) = " + estadosFinales + "\n" + "  Transiciones = " + transiciones.size() + " registradas\n" +"}";
     }
 }
+//HOLA PANCHO
