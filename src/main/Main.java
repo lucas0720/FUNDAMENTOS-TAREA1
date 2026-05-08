@@ -15,11 +15,10 @@ public class Main {
 
         try {
             // 1. RUTAS DE ARCHIVOS
-            String ruta1 = "entradas/automata_afnd.txt";
-            String ruta2 = "entradas/automata_afd_equivalente.txt";
+            String ruta1 = "entradas/automata1.txt";
+            String ruta2 = "entradas/automata2.txt";
 
             validarEntornos();
-
             // 2. LECTURA (Usando tu Singleton)
             System.out.println("[Step 1] Cargando archivos desde 'entradas/'...");
             LectorTXT lector = LectorTXT.getInstancia();
@@ -59,6 +58,7 @@ public class Main {
 
         // ¿Es AFND?
         if (AnalizarAutomata.esAFND(a)) {
+
             System.out.println("  > Detectado como AFND. Convirtiendo a AFD...");
             // Aquí llamarías a tu clase de conversión (Subconjuntos)
             resultado = ConvertidorAFNDaAFD.convertir(a);

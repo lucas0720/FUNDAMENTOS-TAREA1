@@ -191,14 +191,11 @@ public class ConvertidorAFNDaAFD {
         return destinosAlcanzados;
     }
 
-    private static Set<String> obtenerAlfabetoSinEpsilon(Automata automata) {
-        Set<String> alfabeto = new HashSet<>();
-        for (Transicion t : automata.getTransiciones()) {
-            if (!esEpsilon(t.getSimbolo())) {
-                alfabeto.add(t.getSimbolo());
-            }
-        }
-        return alfabeto;
+private static Set<String> obtenerAlfabetoSinEpsilon(Automata automata) {
+        Set<String> alfabetoOriginal = new HashSet<>(automata.getAlfabeto());
+        alfabetoOriginal.removeIf(simbolo -> esEpsilon(simbolo));
+        
+        return alfabetoOriginal;
     }
 
     private static boolean esEpsilon(String simbolo) {
@@ -208,7 +205,6 @@ public class ConvertidorAFNDaAFD {
         return esEpsilon;
     }
 }
-
 /**
  * 1. ==== CLASE ESTRUCTURA =====
  * Se creo la clase contructor privadado para no crear objetos de la clase, ya que no esta pensada para mover datos sino para realizar operaciones logicas

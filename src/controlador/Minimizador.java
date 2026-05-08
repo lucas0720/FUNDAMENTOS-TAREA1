@@ -104,21 +104,31 @@ public class Minimizador {
             if (!agregado) bloques.add(new HashSet<>(Collections.singletonList(e)));
         }
 
-        // Crear nombres limpios (sin duplicados)
+        // =========================================================
+        // AQUÍ ESTÁ LA MAGIA "HUMANA" PARA LOS NOMBRES
+        // =========================================================
         Map<Set<String>, String> nombres = new HashMap<>();
+        int contador = 1; // Empezamos en 1 porque el 0 está reservado para el inicial
+
         for (Set<String> b : bloques) {
-            Set<String> subEstados = new TreeSet<>();
-            for (String s : b) subEstados.addAll(Arrays.asList(s.split(",")));
-            nombres.put(b, String.join(",", subEstados));
+            if (b.contains(afd.getEstadoInicial())) {
+                nombres.put(b, "q0"); // El estado inicial SIEMPRE se llamará q0
+            } else {
+                nombres.put(b, "q" + contador); // Los demás serán q1, q2, q3...
+                contador++;
+            }
         }
 
         // Reconstruir transiciones finales
         Automata min = new Automata();
         min.setAlfabeto(afd.getAlfabeto());
+        
         for (Set<String> b : bloques) {
             String nom = nombres.get(b);
             min.getEstados().add(nom);
+            
             if (b.contains(afd.getEstadoInicial())) min.setEstadoInicial(nom);
+            
             for (String e : b) {
                 if (afd.getEstadosFinales().contains(e)) {
                     min.getEstadosFinales().add(nom);

@@ -1,0 +1,7 @@
+k={A,B}
+sigma={a,b}
+delta:
+(A,a,B)
+(B,a,B)
+s=A
+f={B}
