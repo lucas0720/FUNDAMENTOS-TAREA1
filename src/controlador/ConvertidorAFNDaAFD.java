@@ -62,6 +62,7 @@ public class ConvertidorAFNDaAFD {
         // 7. Armar y entregar
         Automata nuevoAFD = new Automata();
         nuevoAFD.setEstados(nuevosEstados);
+        nuevoAFD.setAlfabeto(obtenerAlfabetoSinEpsilon(automataOriginal));
         nuevoAFD.setEstadoInicial(nuevoEstadoInicial);
         nuevoAFD.setEstadosFinales(nuevosEstadosAceptacion);
         nuevoAFD.setTransiciones(nuevasTransiciones);

@@ -1,9 +1,0 @@
-k={Inicio,Medio,FinA,FinB}
-sigma={x,y,z}
-s=Inicio
-f={FinA,FinB}
-delta:
-(Inicio,x,Medio)
-(Medio,y,FinA)
-(Medio,z,FinB)
-(FinA,x,Inicio)

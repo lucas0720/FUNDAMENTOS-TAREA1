@@ -1,0 +1,10 @@
+digraph G {
+  rankdir=LR;
+  node [shape = circle];
+  node [shape = doublecircle]; "A,B";
+  node [shape = circle];
+  secret_node [style=invisible, width=0, height=0, label=""];
+  secret_node -> "A,B";
+  "A,B" -> "A,B" [label="a"];
+  "A,B" -> "A,B" [label="b"];
+}

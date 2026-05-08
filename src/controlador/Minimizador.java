@@ -1,188 +1,140 @@
 package controlador;
 
-import java.util.*;
 import modelo.*;
+import java.util.*;
+
 public class Minimizador {
 
     public static Automata minimizar(Automata afd) {
+        // 1. COMPLETAR EL AUTOMATA (Estado Trampa) - Paso 1 del PDF
+        Automata afdCompleto = completarAutomata(afd);
         
-        // PASO 0: Obtener los estados y prepararlos en una lista para poder iterar ordenadamente
-        List<String> estados = new ArrayList<>(afd.getEstados());
-        Set<String> finales = afd.getEstadosFinales();
-        
-        // Nuestra "Tabla" será un Conjunto que guarda las parejas que Tienen una 'X'
-        // Si la pareja {q1, q2} está aquí adentro, significa que son DISTINGUIBLES (tienen una X)
+        List<String> estados = new ArrayList<>(afdCompleto.getEstados());
+        Set<String> finales = afdCompleto.getEstadosFinales();
         Set<Set<String>> paresMarcados = new HashSet<>();
 
-        // ========================================================================
-        // PASO 1: CASO BASE (Marcar final vs no-final) - Diapositiva 4 del PDF
-        // ========================================================================
+        // CASO BASE: Final vs No-Final (Pág 4 del PDF)
         for (int i = 0; i < estados.size(); i++) {
             for (int j = i + 1; j < estados.size(); j++) {
-                String p = estados.get(i);
-                String q = estados.get(j);
-                
-                boolean pEsFinal = finales.contains(p);
-                boolean qEsFinal = finales.contains(q);
-                
-                // Si uno es final y el otro no (XOR), le ponemos una 'X' en la tabla
-                if (pEsFinal != qEsFinal) {
-                    paresMarcados.add(new HashSet<>(Arrays.asList(p, q)));
+                if (finales.contains(estados.get(i)) != finales.contains(estados.get(j))) {
+                    paresMarcados.add(crearPar(estados.get(i), estados.get(j)));
                 }
             }
         }
 
-        // ========================================================================
-        // PASO 2: ITERACIONES (Revisar los saltos) - Diapositiva 6 y 8 del PDF
-        // ========================================================================
-        boolean huboCambios;
+        // PASO INDUCTIVO: Llenado de tabla (Pág 6 del PDF)
+        boolean cambio;
         do {
-            huboCambios = false; // Asumimos que no habrá nuevas 'X' en esta vuelta
-            
+            cambio = false;
             for (int i = 0; i < estados.size(); i++) {
                 for (int j = i + 1; j < estados.size(); j++) {
                     String p = estados.get(i);
                     String q = estados.get(j);
-                    Set<String> parActual = new HashSet<>(Arrays.asList(p, q));
-
-                    // Si el par AÚN NO tiene una 'X' (está en blanco en la tabla)
-                    if (!paresMarcados.contains(parActual)) {
-                        
-                        // Probamos con cada letra del alfabeto
-                        for (String letra : afd.getAlfabeto()) {
-                            String destinoP = obtenerDestinoUnico(afd, p, letra);
-                            String destinoQ = obtenerDestinoUnico(afd, q, letra);
-
-                            // Si ambos tienen destino y apuntan a estados diferentes
-                            if (destinoP != null && destinoQ != null && !destinoP.equals(destinoQ)) {
-                                Set<String> parDestino = new HashSet<>(Arrays.asList(destinoP, destinoQ));
-                                
-                                // Si el lugar al que saltaron YA TIENE una 'X'
-                                if (paresMarcados.contains(parDestino)) {
-                                    paresMarcados.add(parActual); // Le ponemos una 'X' a nuestro par actual
-                                    huboCambios = true;           // Avisamos que la tabla cambió
-                                    break; // Ya lo marcamos, no necesitamos probar más letras para este par
-                                }
+                    if (!paresMarcados.contains(crearPar(p, q))) {
+                        for (String letra : afdCompleto.getAlfabeto()) {
+                            String dp = obtenerDestino(afdCompleto, p, letra);
+                            String dq = obtenerDestino(afdCompleto, q, letra);
+                            
+                            // Si los destinos son diferentes y ya están marcados como distintos
+                            if (!dp.equals(dq) && paresMarcados.contains(crearPar(dp, dq))) {
+                                paresMarcados.add(crearPar(p, q));
+                                cambio = true;
+                                break;
                             }
                         }
                     }
                 }
             }
-        } while (huboCambios); // Repetir hasta que ninguna 'X' nueva sea agregada
+        } while (cambio);
 
-        // ========================================================================
-        // PASO 3: CREAR LAS CLASES DE EQUIVALENCIA (Los Bloques) - Diapositiva 11
-        // ========================================================================
-        List<Set<String>> bloques = new ArrayList<>();
+        // AGRUPAR Y ARMAR (Pág 11 del PDF)
+        return construirMinimo(afdCompleto, estados, paresMarcados);
+    }
+
+    private static Automata completarAutomata(Automata original) {
+        Automata copia = new Automata(new HashSet<>(original.getEstados()), new HashSet<>(original.getAlfabeto()), 
+                         original.getEstadoInicial(), new HashSet<>(original.getEstadosFinales()), 
+                         new ArrayList<>(original.getTransiciones()));
         
-        // Inicialmente, cada estado es su propio bloque aislado
-        for (String estado : estados) {
-            bloques.add(new HashSet<>(Arrays.asList(estado)));
-        }
-        
-        // Juntamos los bloques de los estados que quedaron SIN MARCAR (son equivalentes)
-        for (int i = 0; i < estados.size(); i++) {
-            for (int j = i + 1; j < estados.size(); j++) {
-                String p = estados.get(i);
-                String q = estados.get(j);
-                Set<String> parActual = new HashSet<>(Arrays.asList(p, q));
-                
-                if (!paresMarcados.contains(parActual)) {
-                    // Buscamos en qué bloque está 'p' y en cuál está 'q'
-                    Set<String> bloqueP = null, bloqueQ = null;
-                    for (Set<String> b : bloques) {
-                        if (b.contains(p)) bloqueP = b;
-                        if (b.contains(q)) bloqueQ = b;
-                    }
-                    
-                    // Si están en bloques separados, los fusionamos
-                    if (bloqueP != null && bloqueQ != null && bloqueP != bloqueQ) {
-                        bloqueP.addAll(bloqueQ);
-                        bloques.remove(bloqueQ);
-                    }
+        String TRAMPA = "T";
+        boolean necesitaTrampa = false;
+
+        for (String e : copia.getEstados()) {
+            for (String letra : copia.getAlfabeto()) {
+                if (obtenerDestino(copia, e, letra).equals("NULL")) {
+                    copia.getTransiciones().add(new Transicion(e, letra, TRAMPA));
+                    necesitaTrampa = true;
                 }
             }
         }
 
-        // ========================================================================
-        // PASO 4: CONSTRUIR EL NUEVO AUTÓMATA MÍNIMO
-        // ========================================================================
-        return ensamblarAutomataMinimo(afd, bloques);
-    }
-
-    // ========================================================================
-    // HERRAMIENTAS DE APOYO (MÉTODOS PRIVADOS)
-    // ========================================================================
-
-    // Busca hacia dónde salta un estado con una letra específica (En un AFD solo hay 1 camino)
-    private static String obtenerDestinoUnico(Automata afd, String estadoOrigen, String letra) {
-        for (Transicion t : afd.getTransiciones()) {
-            if (t.getEstadoOrigen().equals(estadoOrigen) && t.getSimbolo().equals(letra)) {
-                return t.getEstadoDestino();
+        if (necesitaTrampa) {
+            copia.getEstados().add(TRAMPA);
+            for (String letra : copia.getAlfabeto()) {
+                copia.getTransiciones().add(new Transicion(TRAMPA, letra, TRAMPA));
             }
         }
-        return null; // Si no hay camino (callejón sin salida)
+        return copia;
     }
 
-    // Traduce la lista de "Bloques" a un nuevo objeto Automata
-    private static Automata ensamblarAutomataMinimo(Automata afdOriginal, List<Set<String>> bloques) {
-        Automata minimo = new Automata();
-        minimo.setAlfabeto(afdOriginal.getAlfabeto());
-        
-        // Diccionario para saber cómo se llama cada bloque (ej: "q0,q1")
-        Map<Set<String>, String> nombresBloques = new HashMap<>();
-        Set<String> nuevosEstados = new HashSet<>();
-        Set<String> nuevosFinales = new HashSet<>();
-        
-        for (Set<String> bloque : bloques) {
-            // Ordenamos y unimos los nombres (Ej: {3, 1} -> "1,3")
-            List<String> listaOrdenada = new ArrayList<>(bloque);
-            Collections.sort(listaOrdenada);
-            String nombreFusionado = String.join(",", listaOrdenada);
-            
-            nombresBloques.put(bloque, nombreFusionado);
-            nuevosEstados.add(nombreFusionado);
-            
-            // Si algún estado de este bloque era Final en el original, todo el bloque es Final
-            for (String estado : bloque) {
-                if (afdOriginal.getEstadosFinales().contains(estado)) {
-                    nuevosFinales.add(nombreFusionado);
+    private static String obtenerDestino(Automata a, String origen, String letra) {
+        for (Transicion t : a.getTransiciones()) {
+            if (t.getEstadoOrigen().equals(origen) && t.getSimbolo().equals(letra)) return t.getEstadoDestino();
+        }
+        return "NULL";
+    }
+
+    private static Set<String> crearPar(String a, String b) {
+        return new HashSet<>(Arrays.asList(a, b));
+    }
+
+    private static Automata construirMinimo(Automata afd, List<String> estados, Set<Set<String>> marcados) {
+        // Lógica de unión de bloques (Clases de equivalencia)
+        List<Set<String>> bloques = new ArrayList<>();
+        for (String e : estados) {
+            boolean agregado = false;
+            for (Set<String> b : bloques) {
+                String representante = b.iterator().next();
+                if (!marcados.contains(crearPar(e, representante))) {
+                    b.add(e);
+                    agregado = true;
                     break;
                 }
             }
-            
-            // Si el bloque contiene al estado inicial antiguo, este bloque es el nuevo Inicial
-            if (bloque.contains(afdOriginal.getEstadoInicial())) {
-                minimo.setEstadoInicial(nombreFusionado);
-            }
+            if (!agregado) bloques.add(new HashSet<>(Collections.singletonList(e)));
         }
-        
-        // Reconstruir transiciones leyendo solo 1 representante de cada bloque
-        List<Transicion> nuevasTransiciones = new ArrayList<>();
-        for (Set<String> bloque : bloques) {
-            String representante = bloque.iterator().next(); // Tomamos a cualquiera, todos se comportan igual
-            String nombreOrigen = nombresBloques.get(bloque);
-            
-            for (String letra : minimo.getAlfabeto()) {
-                String destinoOriginal = obtenerDestinoUnico(afdOriginal, representante, letra);
-                
-                if (destinoOriginal != null) {
-                    // Buscamos en qué bloque quedó el destino
-                    for (Set<String> bDestino : bloques) {
-                        if (bDestino.contains(destinoOriginal)) {
-                            String nombreDestino = nombresBloques.get(bDestino);
-                            nuevasTransiciones.add(new Transicion(nombreOrigen, letra, nombreDestino));
-                            break;
-                        }
+
+        // Crear nombres limpios (sin duplicados)
+        Map<Set<String>, String> nombres = new HashMap<>();
+        for (Set<String> b : bloques) {
+            Set<String> subEstados = new TreeSet<>();
+            for (String s : b) subEstados.addAll(Arrays.asList(s.split(",")));
+            nombres.put(b, String.join(",", subEstados));
+        }
+
+        // Reconstruir transiciones finales
+        Automata min = new Automata();
+        min.setAlfabeto(afd.getAlfabeto());
+        for (Set<String> b : bloques) {
+            String nom = nombres.get(b);
+            min.getEstados().add(nom);
+            if (b.contains(afd.getEstadoInicial())) min.setEstadoInicial(nom);
+            for (String e : b) {
+                if (afd.getEstadosFinales().contains(e)) {
+                    min.getEstadosFinales().add(nom);
+                    break;
+                }
+            }
+            for (String letra : min.getAlfabeto()) {
+                String destOrig = obtenerDestino(afd, b.iterator().next(), letra);
+                for (Set<String> bDest : bloques) {
+                    if (bDest.contains(destOrig)) {
+                        min.getTransiciones().add(new Transicion(nom, letra, nombres.get(bDest)));
+                        break;
                     }
                 }
             }
         }
-        
-        minimo.setEstados(nuevosEstados);
-        minimo.setEstadosFinales(nuevosFinales);
-        minimo.setTransiciones(nuevasTransiciones);
-        
-        return minimo;
+        return min;
     }
 }
