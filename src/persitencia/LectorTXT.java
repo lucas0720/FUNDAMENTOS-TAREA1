@@ -10,8 +10,13 @@ import modelo.Transicion;
 
 public class LectorTXT {
     
-    private static LectorTXT instancia;
+    
 
+    //Constructor
+    private LectorTXT() {} 
+
+    //Singleton
+    private static LectorTXT instancia;
     public static LectorTXT getInstancia() {
         if (instancia == null) {
             instancia = new LectorTXT();
@@ -40,6 +45,7 @@ public class LectorTXT {
 
             while ((linea = lector.readLine()) != null) {
                 //Limpieza de linea
+
                 linea = linea.trim();
                 if (linea.isEmpty() || linea.equals("delta:")) continue;
                 linea = linea.replace(" ", "");
@@ -79,6 +85,7 @@ public class LectorTXT {
         
         }
 
+        //CREAMOS EL AUTOMATA CON LOS DATOS OBTENIDOS
         Automata automata = new Automata(estados, alfabeto, estadoInicial, estadosFinales, transiciones);
         return automata;
     }
@@ -92,6 +99,7 @@ public class LectorTXT {
 
         contenido = contenido.replace("k={", "");
         contenido = contenido.replace("}", "");
+
         String[] estadosarr = contenido.split(",");
 
         for (String e : estadosarr) {
@@ -106,6 +114,7 @@ public class LectorTXT {
 
         contenido = contenido.replace("sigma={", "");
         contenido = contenido.replace("}", "");
+        
         String[] simbolosarr = contenido.split(",");
 
         for (String simbolo : simbolosarr) {
