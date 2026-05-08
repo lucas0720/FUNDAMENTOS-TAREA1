@@ -1,4 +1,4 @@
-package controlador;
+package persitencia;
 
 import modelo.Automata;
 import modelo.Transicion;
@@ -13,12 +13,12 @@ public class EscritorGraphviz {
         String ruta = "salidas/" + nombreArchivo + ".dot";
         
         try (PrintWriter pw = new PrintWriter(new FileWriter(ruta))) {
-            // Inicio del formato DOT
-            pw.println("digraph G {");
-            pw.println("  rankdir=LR;"); // Orientación de izquierda a derecha
-            pw.println("  node [shape = circle];"); // Forma base de los estados
 
-            // 1. Configurar los estados finales (con doble círculo)
+            pw.println("digraph G {");
+            pw.println("  rankdir=LR;");
+            pw.println("  node [shape = circle];"); 
+            
+  
             if (!automata.getEstadosFinales().isEmpty()) {
                 pw.print("  node [shape = doublecircle];");
                 for (String f : automata.getEstadosFinales()) {
@@ -35,8 +35,7 @@ public class EscritorGraphviz {
 
             // 3. Escribir las transiciones
             for (Transicion t : automata.getTransiciones()) {
-                pw.println("  \"" + t.getEstadoOrigen() + "\" -> \"" + t.getEstadoDestino() + 
-                           "\" [label=\"" + t.getSimbolo() + "\"];");
+                pw.println("  \"" + t.getEstadoOrigen() + "\" -> \"" + t.getEstadoDestino() + "\" [label=\"" + t.getSimbolo() + "\"];");
             }
 
             pw.println("}");

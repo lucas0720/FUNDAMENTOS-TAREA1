@@ -2,6 +2,7 @@ package main;
 
 import modelo.Automata;
 import controlador.*;
+import persitencia.EscritorGraphviz;
 import persitencia.LectorTXT;
 import java.io.File;
 
