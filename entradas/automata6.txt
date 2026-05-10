@@ -1,0 +1,11 @@
+k={p0,p1,p2,p3,p4}
+sigma={a,b}
+s=p0
+f={p4}
+delta:
+(p0,eps,p1)
+(p1,a,p1)
+(p1,b,p1)
+(p1,a,p2)
+(p2,eps,p3)
+(p3,b,p4)

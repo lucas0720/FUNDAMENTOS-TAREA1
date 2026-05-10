@@ -1,0 +1,14 @@
+digraph G {
+  rankdir=LR;
+  node [shape = circle];
+  node [shape = doublecircle]; "q2";
+  node [shape = circle];
+  secret_node [style=invisible, width=0, height=0, label=""];
+  secret_node -> "q0";
+  "q0" -> "q1" [label="a"];
+  "q0" -> "q0" [label="b"];
+  "q1" -> "q1" [label="a"];
+  "q1" -> "q2" [label="b"];
+  "q2" -> "q1" [label="a"];
+  "q2" -> "q0" [label="b"];
+}
