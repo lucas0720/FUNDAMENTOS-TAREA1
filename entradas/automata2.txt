@@ -1,7 +1,13 @@
-k={A,B}
+k={A,B,C,D}
 sigma={a,b}
 delta:
 (A,a,B)
+(A,b,A)
 (B,a,B)
+(B,b,C)
+(C,a,D)
+(C,b,A)
+(D,a,D)
+(D,b,D)
 s=A
-f={B}
+f={D}

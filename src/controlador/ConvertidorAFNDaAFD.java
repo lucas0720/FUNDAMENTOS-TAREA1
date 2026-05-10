@@ -2,6 +2,7 @@ package controlador;
 
 import java.util.*;
 import modelo.*;
+//MAS comentarios al final del codigo , donde apuntamos otras cosas
 
 public class ConvertidorAFNDaAFD {
 
@@ -9,36 +10,43 @@ public class ConvertidorAFNDaAFD {
 
     public static Automata convertir(Automata automataOriginal) {
         
-        Map<Set<String>, Map<String, Set<String>>> tablaDeConversion = construirTablaConversion(automataOriginal);
+        Map<Set<String>, Map<String, Set<String>>> tablaDeConversion = construirTablaConversion(automataOriginal);// tabla de conversion como la que vimos en clae , donde ponemos los estados en la primera columna , los nuevos estados y las trnasiciones depsues
         Map<Set<String>, String> nombresNuevos = new HashMap<>();
         
-        for (Set<String> superEstado : tablaDeConversion.keySet()) {
+        for (Set<String> superEstado : tablaDeConversion.keySet()) { // aqui con keySet , toma super estados , q seria como los estados que quedaron el la tabla de convesion entonces hay estados que quedan juntos tipo {q2, q0, q1}
             
-            List<String> listaOrdenada = new ArrayList<>(superEstado);
-            Collections.sort(listaOrdenada); 
+            List<String> listaOrdenada = new ArrayList<>(superEstado); // convertimos el conjunto en una lista asi la ordenamos
+            Collections.sort(listaOrdenada); // con esto ordenamos de forma ordenada , para no tener problemas con conjuntos que sean q0,q1 y q1,q0 , que son lo mismo ,
             String nombreFusionado = String.join(",", listaOrdenada);
             
             nombresNuevos.put(superEstado, nombreFusionado);
         }
 
-        // 3. Preparar las listas en blanco
-        Set<String> nuevosEstados = new HashSet<>(nombresNuevos.values());
+        // preparar las listas en blanco
+        Set<String> nuevosEstados = new HashSet<>(nombresNuevos.values()); // guardamos los nombre de los nombres nuevos aqui
         ArrayList<Transicion> nuevasTransiciones = new ArrayList<>();
         Set<String> nuevosEstadosAceptacion = new HashSet<>();
         
-        // 4. Estado Inicial
+        // estado Inicial
         Set<String> clausuraInicial = EstadosAlcanzables(automataOriginal, automataOriginal.getEstadoInicial());
         String nuevoEstadoInicial = nombresNuevos.get(clausuraInicial);
 
-        // 5. Finales originales
+        // Finales originales
         Set<String> finalesOriginales = automataOriginal.getEstadosFinales();
 
-        // 6. Rellenar transiciones y buscar finales
+        //Rellenar transiciones y buscar finales
+        //tipo Map.Entry<Set<String>, Map<String, Set<String>>> :
+        /* El Map.Entry <clave , valor> 
+           la clave es un set String porque representa los estados de automata que aveces pueden estar juntos,
+           el valor quedo como un Map, porque el String es la letra del alfabeto de la tabla, y el Set<String> seria el estado hacia donde llega
+           Map.Entry , porque es la forma de tomar como ambos valores la llave y su valor entonces vamor recorrendo todo con esos metodos
+         */
+
         for (Map.Entry<Set<String>, Map<String, Set<String>>> fila : tablaDeConversion.entrySet()) {
             Set<String> superEstadoOrigen = fila.getKey();
             String nombreOrigen = nombresNuevos.get(superEstadoOrigen);
 
-            // A) ¿Es de aceptación?
+            
             for (String estado : superEstadoOrigen) {
                 if (finalesOriginales.contains(estado)) {
                     nuevosEstadosAceptacion.add(nombreOrigen);
@@ -46,7 +54,7 @@ public class ConvertidorAFNDaAFD {
                 }
             }
 
-            // B) Crear flechas
+            // crear flechas
             Map<String, Set<String>> saltos = fila.getValue();
             for (Map.Entry<String, Set<String>> salto : saltos.entrySet()) {
                 String letra = salto.getKey();
@@ -59,7 +67,7 @@ public class ConvertidorAFNDaAFD {
             }
         }
 
-        // 7. Armar y entregar
+        //Armar y entregar
         Automata nuevoAFD = new Automata();
         nuevoAFD.setEstados(nuevosEstados);
         nuevoAFD.setAlfabeto(obtenerAlfabetoSinEpsilon(automataOriginal));
@@ -126,7 +134,7 @@ public class ConvertidorAFNDaAFD {
         /*
         Map<Set<String>, Map<String, Set<String>>>
 
-            Set<String> = Estadonuevo del ADF conseguirdo en la linea , en la fila 97 donde fuimos fuardanso los nuevos Estados que se van descubriendo por la pila
+            Set<String> = Estadonuevo del ADF conseguirdo en la linea 
 
             Map<String, Set<String>> 
             
@@ -214,7 +222,36 @@ private static Set<String> obtenerAlfabetoSinEpsilon(Automata automata) {
  * 
  * 2. ==== FUNCIONALIDADES ====
  * 
- *    ----- METODO ----- clausura(Automata automata, Set<String> estados):
+ *  
+ * ----- METODO ----- public static Automata convertir(Automata automataOriginal) {
+ * 
+ * Es el metodo principal de la clase donde buscmaos replicar el paso a paso del procedimiento que vimos en clase donde buscamos retornar un automata osea
+ * recibe un automada AFND y lo transforma a un AFD , funicona en base a muchos metodos privados para no volverse tan extenso
+ * 
+ * tablaDeConverison: aqui recuperamos la tabla de conversion , la tabla donde tomamos los estados en una columna y depsues en las transicicones vamos pasando
+ * a otros estados , asi descubirendo los nuevos estados
+ * 
+ * nombre nuevos: aqui guardamos los nuevos nombres de los estados, pra el nuvo AFD
+ * 
+ * for (Set<String> superEstado : tablaDeConversion.keySet()) {:rcuperamos el conjunto de estados ahora qe estan en la primera columna ,
+ * y los ordenamos en la nueva liesta en el formato que mas nos acomodaba , no fucionando los estaods en uno nuevos sino que , separandlos con una ,  
+ * 
+ *  
+ * List<String> listaOrdenada = new ArrayList<>(superEstado); eso es para convertirlo en un tipo lista para ordenarlo
+ * 
+ * Collections.sort(listaOrdenada); con esto ordenamos de forma ordenada , para no tener problemas con conjuntos que sean q0,q1 y q1,q0 , que son lo mismo ,
+ * habiamos tenido el problema por esto asique buscamos como arreglarlo y con essto lo logramos
+ * 
+ * String nombreFusionado = String.join(",", listaOrdenada);
+ * aqui solo convertimos la lista en un String , y separamos cada elemento de la lista con una , 
+ * asi logrmaos el formato que queriamos separando por q0 , q1 ,q2
+ * 
+ * nombresNuevos.put(superEstado, nombreFusionado);
+ * aqui usamos la estructura HashMap para poder guardar de forma organizada, donde un super estado queda al inicio yle damos el nombre que uraemos
+ * 
+ * 
+ *  
+ *    
  * 
  *    ----- METODO ----- clausuraEpsilonIndividual(Automata automata, String estado): 
  *
@@ -225,6 +262,5 @@ private static Set<String> obtenerAlfabetoSinEpsilon(Automata automata) {
  * epsilon pero no hemos revisado sus transiciones epsilon, asi evitamos problemas de ciclos con epsilon.
  * 
  * while (!pila.isEmpty()): para procesar los estados alcanzables por epsilon, sacamos un estado de la pila.
- * 
  * 
  */

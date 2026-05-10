@@ -4,12 +4,16 @@ import modelo.Automata;
 import modelo.Transicion;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.io.File;
+
 
 public class EscritorGraphviz {
 
+    /**
+     * ----- METODO ----- generarArchivoDot(Automata automata, String nombreArchivo)
+     * toma el autómata y escribe las instrucciones de dibujo línea por línea en un archivo.
+     */
     public static void generarArchivoDot(Automata automata, String nombreArchivo) {
-        // Creamos la ruta hacia la carpeta de salidas
+        // creamos la ruta hacia la carpeta de salidas
         String ruta = "salidas/" + nombreArchivo + ".dot";
         
         try (PrintWriter pw = new PrintWriter(new FileWriter(ruta))) {
@@ -17,8 +21,8 @@ public class EscritorGraphviz {
             pw.println("digraph G {");
             pw.println("  rankdir=LR;");
             pw.println("  node [shape = circle];"); 
-            
-  
+
+            //Dibujamos los estados de aceptacion 
             if (!automata.getEstadosFinales().isEmpty()) {
                 pw.print("  node [shape = doublecircle];");
                 for (String f : automata.getEstadosFinales()) {
@@ -28,12 +32,13 @@ public class EscritorGraphviz {
                 pw.println(";");
             }
 
-            // 2. Volver a círculo normal para el resto y crear la flecha inicial
+            //dibujamos el estado inicial
+
             pw.println("  node [shape = circle];");
             pw.println("  secret_node [style=invisible, width=0, height=0, label=\"\"];");
             pw.println("  secret_node -> \"" + automata.getEstadoInicial() + "\";");
 
-            // 3. Escribir las transiciones
+            // Escribir las transiciones
             for (Transicion t : automata.getTransiciones()) {
                 pw.println("  \"" + t.getEstadoOrigen() + "\" -> \"" + t.getEstadoDestino() + "\" [label=\"" + t.getSimbolo() + "\"];");
             }
@@ -46,12 +51,19 @@ public class EscritorGraphviz {
         }
     }
 
+    /**
+     * ----- METODO ----- mostrarGrafico(String nombreArchivo)
+     * 
+     * Una vez que el archivo .dot de texto existe, este método le da la orden al computador 
+     * para que lo transforme en imagen y lo abra en pantalla automáticamente.
+     */
+
     public static void mostrarGrafico(String nombreArchivo) {
         try {
             String dotPath = "salidas/" + nombreArchivo + ".dot";
             String pngPath = "salidas/" + nombreArchivo + ".png";
 
-            // 1. Generar el PNG (Esto es igual en todos lados si el PATH está bien)
+            //Generar el PNG 
             ProcessBuilder pbDot = new ProcessBuilder("dot", "-Tpng", dotPath, "-o", pngPath);
             pbDot.start().waitFor();
 
@@ -64,3 +76,23 @@ public class EscritorGraphviz {
         }
     }
 }
+
+//Aqui nos ayudamos con ia al buscar como generar el archivo . dot y como hacerlo forma correcta porque no teniamos experiencia de como hacerl0
+//lo ocupamos como guia
+
+/**
+ *  ==== CLASE ESTRUCTURA Y CONCEPTO =====
+ * Esta clase actúa como el "Dibujante" de nuestro proyecto y su única responsabilidad 
+ * es tomar toda la lógica de nuestros objetos Automata y traducirla a 
+ * un archivo de texto que el programa Graphviz pueda entender para dibujar los grafos.
+ * 
+ * NOTA DE DESARROLLO (Uso de IA como guía técnica):
+ * Como equipo no teníamos experiencia previa escribiendo sintaxis de lenguaje DOT 
+
+ * Inteligencia Artificial como documentación interactiva y guía para aprender a:
+ * 1. Estructurar correctamente el archivo .dot.
+ * 
+ * 2. Utilizar la clase ProcessBuilder para comunicarnos con el sistema operativo.
+ *
+ */
+  

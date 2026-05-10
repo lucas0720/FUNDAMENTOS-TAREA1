@@ -9,27 +9,24 @@ public class VerificadorEquivalencia {
      * Este es el método principal que llamarás desde tu Main.
      */
     public static boolean sonEquivalentes(Automata af1, Automata af2) {
-        // 1. Minimizamos ambos autómatas para dejarlos en su versión más compacta
+        // minimizamos ambos autómatas para dejarlos en su versión más compacta
         Automata min1 = Minimizador.minimizar(af1);
         Automata min2 = Minimizador.minimizar(af2);
 
-        // 2. Estandarizamos los nombres de sus estados (El truco del isomorfismo)
-        // Esto asegura que si ambos tienen la misma estructura, ambos se llamarán "q0, q1..."
+        // estandarizamos los nombres de sus estados
+        // esto asegura que si ambos tienen la misma estructura, ambos se llamarán "q0, q1 " porque son iguale
         Automata norm1 = normalizarNombres(min1);
         Automata norm2 = normalizarNombres(min2);
 
-        // 3. ¡La prueba final! Usamos el método equals() que tú ya programaste en la clase Automata
+        //Usamos el método equals() que tú ya programaste en la clase Automata
         return norm1.equals(norm2);
     }
 
-    // ========================================================================
-    // HERRAMIENTAS DE APOYO (MÉTODOS PRIVADOS)
-    // ========================================================================
-
-    /**
-     * Recorre el autómata de forma ordenada (BFS) y le cambia los nombres a los 
+    /*+
+     * Recorre el autómata de forma ordenada  y le cambia los nombres a los 
      * estados por "q0", "q1", "q2"... siguiendo el rastro de las letras.
      */
+
     private static Automata normalizarNombres(Automata afdMinimo) {
         Map<String, String> diccionarioNombres = new HashMap<>();
         Queue<String> colaBusqueda = new LinkedList<>(); // Bandeja de pendientes
@@ -37,13 +34,13 @@ public class VerificadorEquivalencia {
         int contador = 0;
         String inicialOriginal = afdMinimo.getEstadoInicial();
         
-        // El estado inicial SIEMPRE será bautizado como "q0"
+        // El estado inicial será bautizado como "q0"
         diccionarioNombres.put(inicialOriginal, "q" + contador);
         colaBusqueda.add(inicialOriginal);
         contador++;
 
         // Ordenamos el alfabeto alfabéticamente (ej: primero 'a', luego 'b')
-        // Esto es VITAL para que la exploración siempre siga el mismo camino
+        // para que la exploración siempre siga el mismo camino
         List<String> alfabetoOrdenado = new ArrayList<>(afdMinimo.getAlfabeto());
         Collections.sort(alfabetoOrdenado);
 
@@ -63,9 +60,6 @@ public class VerificadorEquivalencia {
             }
         }
 
-        // =======================================================
-        // ARMAMOS EL AUTÓMATA CLONADO PERO CON NOMBRES NUEVOS
-        // =======================================================
         Automata normalizado = new Automata();
         normalizado.setAlfabeto(afdMinimo.getAlfabeto());
         normalizado.setEstadoInicial(diccionarioNombres.get(inicialOriginal));
@@ -102,9 +96,6 @@ public class VerificadorEquivalencia {
         return normalizado;
     }
 
-    /**
-     * Busca el destino directo de una transición (Reutilizamos la lógica que ya dominas)
-     */
     private static String obtenerDestinoUnico(Automata afd, String origen, String letra) {
         for (Transicion t : afd.getTransiciones()) {
             if (t.getEstadoOrigen().equals(origen) && t.getSimbolo().equals(letra)) {
@@ -113,4 +104,17 @@ public class VerificadorEquivalencia {
         }
         return null;
     }
-}
+}/**
+ *  ==== CLASE ESTRUCTURA Y CONCEPTO =====
+ * Esta clase se encarga de resolver el problema del ismorfimo entre dos autómatas.
+ *  osea cuando Dos autómatas pueden estar dibujados de forma totalmente distinta 
+ * y tener nombres de estados diferentes, pero si aceptan exactamente el mismo lenguaje, 
+ * son equivalentes. 
+ * 
+ * Nuestra estrategia de solución es el de los caminos gemelos:
+ * 1. Minimizamos ambos autómatas a su máxima expresión.
+ * 
+ * 2. Les borramos los nombres originales y los "normalizamos" .
+ * 
+ * 3. Si realmente hacían lo mismo, al normalizarlos deberían ser gemelos idénticos.
+ */

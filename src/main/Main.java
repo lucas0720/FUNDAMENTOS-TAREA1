@@ -1,89 +1,163 @@
 package main;
 
 import modelo.Automata;
-import controlador.*;
-import persitencia.EscritorGraphviz;
 import persitencia.LectorTXT;
-import java.io.File;
+import persitencia.EscritorGraphviz;
+import controlador.ConvertidorAFNDaAFD; 
+import controlador.Minimizador;
+import controlador.VerificadorEquivalencia;
 
+import java.io.File;
+import java.util.Scanner;
+
+/**
+ * 1. ==== CLASE ESTRUCTURA Y CONCEPTO =====
+ * Clase principal que gestiona la interfaz de consola del usuario.
+ * Ejecuta el flujo secuencial de lectura, conversión, minimización y 
+ * verificación de autómatas, mostrando los resultados en un formato 
+ * estructurado y profesional.
+ */
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println("====================================================");
-        System.out.println("   SISTEMA DE ANÁLISIS DE AUTÓMATAS - UBB 2026");
-        System.out.println("====================================================\n");
+        Scanner scanner = new Scanner(System.in);
+        boolean salir = false;
 
-        try {
-            // 1. RUTAS DE ARCHIVOS
-            String ruta1 = "entradas/automata1.txt";
-            String ruta2 = "entradas/automata2.txt";
+        //DIBUJITOS PARA QUE SE VEA BONITO EN CONSOLA
+        System.out.println("┌────────────────────────────────────────────────────────┐");
+        System.out.println("│           SISTEMA DE ANÁLISIS DE AUTÓMATAS 1           │");
+        System.out.println("└────────────────────────────────────────────────────────┘");
+        System.out.println(" INSTRUCCIONES:");
+        System.out.println(" Coloque sus archivos de texto (.txt) con las definiciones");
+        System.out.println(" matemáticas dentro del directorio: /Entradas");
+        System.out.println("──────────────────────────────────────────────────────────\n");
 
-            validarEntornos();
-            // 2. LECTURA (Usando tu Singleton)
-            System.out.println("[Step 1] Cargando archivos desde 'entradas/'...");
-            LectorTXT lector = LectorTXT.getInstancia();
-            Automata a1 = lector.leerAutomataDesdeArchivo(ruta1);
-            Automata a2 = lector.leerAutomataDesdeArchivo(ruta2);
-
-            // 3. PROCESAMIENTO DEL PRIMER AUTÓMATA
-            System.out.println("\n[Step 2] Procesando Autómata 1...");
-            Automata afd1 = procesarFlujoCompleto(a1, "Autómata_1");
-
-            // 4. PROCESAMIENTO DEL SEGUNDO AUTÓMATA
-            System.out.println("\n[Step 3] Procesando Autómata 2...");
-            Automata afd2 = procesarFlujoCompleto(a2, "Autómata_2");
-
-            // 5. VERIFICACIÓN DE EQUIVALENCIA
-            System.out.println("\n[Step 4] Comprobando equivalencia de lenguajes...");
-            boolean equivalentes = VerificadorEquivalencia.sonEquivalentes(afd1, afd2);
+        while (!salir) {
+            System.out.println("┌─────────────────────── MENÚ ───────────────────────────┐");
+            System.out.println("│ [1] Procesar y comparar dos autómatas                  │");
+            System.out.println("│ [2] Salir del sistema                                  │");
+            System.out.println("└────────────────────────────────────────────────────────┘");
+            System.out.print(" Seleccione una opción: ");
             
-            System.out.println("----------------------------------------------------");
-            if (equivalentes) {
-                System.out.println(">>> RESULTADO: Los autómatas SON EQUIVALENTES.");
-            } else {
-                System.out.println(">>> RESULTADO: Los autómatas NO SON equivalentes.");
+            String opcion = scanner.nextLine();
+
+            switch (opcion) {
+                case "1":
+                    ejecutarFlujoCompleto(scanner);
+                    break;
+                case "2":
+                    System.out.println("\nfinalizando ejecución del sistema");
+                    salir = true;
+                    break;
+                default:
+                    System.out.println("\n[Opción no válida :c Intente nuevamente.\n");
             }
-            System.out.println("----------------------------------------------------");
-
-            System.out.println("\n[INFO] Revisa la carpeta 'salidas/' para ver los archivos .dot y .png");
-
-        } catch (Exception e) {
-            System.err.println("\n[ERROR CRÍTICO]: " + e.getMessage());
-            e.printStackTrace();
         }
+        scanner.close();
     }
 
-    private static Automata procesarFlujoCompleto(Automata a, String etiqueta) {
-        Automata resultado = a;
-
-        // ¿Es AFND?
-        if (AnalizarAutomata.esAFND(a)) {
-
-            System.out.println("  > Detectado como AFND. Convirtiendo a AFD...");
-            // Aquí llamarías a tu clase de conversión (Subconjuntos)
-            resultado = ConvertidorAFNDaAFD.convertir(a);
-        } else {
-            System.out.println("  > Detectado como AFD. Saltando conversión.");
-        }
-
-        // Minimización obligatoria por pauta
-        System.out.println("  > Aplicando Algoritmo de Minimización...");
-        resultado = Minimizador.minimizar(resultado);
-
-        // Exportar a Graphviz
-        EscritorGraphviz.generarArchivoDot(resultado, "resultado_" + etiqueta);
-        EscritorGraphviz.mostrarGrafico("resultado_" + etiqueta);
-
-        return resultado;
-    }
-
-    private static void validarEntornos() throws Exception {
-        File folderSalida = new File("salidas");
-        if (!folderSalida.exists()) folderSalida.mkdir();
+    private static void ejecutarFlujoCompleto(Scanner scanner) {
+        System.out.println("\n───────────────── INGRESO DE ARCHIVOS ────────────────────");
+        System.out.print(" Ingrese nombre del PRIMER archivo  (ej: automata1): ");
+        String nombreArch1 = scanner.nextLine();
         
-        File folderEntrada = new File("entradas");
-        if (!folderEntrada.exists()) {
-            throw new Exception("La carpeta 'entradas' no existe. Créala y añade los .txt");
+        System.out.print(" Ingrese nombre del SEGUNDO archivo (ej: automata2): ");
+        String nombreArch2 = scanner.nextLine();
+
+        String ruta1 = "Entradas/" + nombreArch1 + ".txt";
+        String ruta2 = "Entradas/" + nombreArch2 + ".txt";
+
+        if (!new File(ruta1).exists() || !new File(ruta2).exists()) {
+            System.out.println("\n[ERROR] No se encontraron los archivos en la ruta especificada.");
+            System.out.println("Verifique el directorio /Entradas e intente nuevamente.\n");
+            return; 
         }
+
+        System.out.println("\nINICIANDO SECUENCIA DE ANÁLISIS");
+
+        // PROCESANDO EL PRIMER AUTO-MATA
+        Automata min1 = procesarUnAutomata(ruta1, nombreArch1, 1);
+        // PROCESANDO EL SEGUNDO AUTO-MATA
+        Automata min2 = procesarUnAutomata(ruta2, nombreArch2, 2);
+
+        // VERIFICACIÓN 
+        System.out.println("\n==========================================================");
+        System.out.println("                     FASE DE VERIFICACIÓN                   ");
+        System.out.println("===============================================================");
+        
+        System.out.println("\n┌────────────────────────────────────────────────────────┐");
+        System.out.println("│ PASO 5: ANÁLISIS DE ISOMORFISMO ENTRE AUTÓMATAS        │");
+        System.out.println("└────────────────────────────────────────────────────────┘");
+        System.out.println(" >Evaluando igualdad");
+        
+        boolean sonIguales = VerificadorEquivalencia.sonEquivalentes(min1, min2);
+
+        System.out.println("\n┌──────────────────── VEREDICTO FINAL ───────────────────┐");
+        if (sonIguales) {
+            System.out.println("│ RESULTADO: EQUIVALENTES                                │");
+            System.out.println("│ Detalle  : Ambos autómatas procesan exactamente el     │");
+            System.out.println("│            mismo lenguaje regular.                     │");
+        } else {
+            System.out.println("│ RESULTADO: NO EQUIVALENTES                             │");
+            System.out.println("│ Detalle  : Los autómatas difieren en el lenguaje que   │");
+            System.out.println("│            aceptan o en su comportamiento lógico.      │");
+        }
+        System.out.println("└────────────────────────────────────────────────────────┘\n");
+    }
+
+    /**
+     * ----- METODO AYUDANTE -----
+     * Procesa un autómata individual aplicando las fases de lectura,
+     */
+    private static Automata procesarUnAutomata(String rutaArchivo, String nombreArchivo, int numeroAutomata) {
+        
+        System.out.println("\n==========================================================");
+        System.out.println("           ANALIZANDO AUTÓMATA " + numeroAutomata + " (" + nombreArchivo + ".txt)");
+        System.out.println("==========================================================");
+
+        // PASO 1
+        System.out.println("\n┌────────────────────────────────────────────────────────┐");
+        System.out.println("│ PASO 1: LECTURA DE ARCHIVO Y EXTRACCIÓN DE DATOS       │");
+        System.out.println("└────────────────────────────────────────────────────────┘");
+
+        Automata automataOriginal = LectorTXT.getInstancia().leerAutomataDesdeArchivo(rutaArchivo);
+
+        System.out.println(" > Archivo procesado correctamente.");
+        System.out.println(" > Total de estados originales definidos: " + automataOriginal.getEstados().size());
+
+        // PASO 2
+        System.out.println("\n┌────────────────────────────────────────────────────────┐");
+        System.out.println("│ PASO 2: CONVERSIÓN Y BLINDAJE (AFND -> AFD)            │");
+        System.out.println("└────────────────────────────────────────────────────────┘");
+
+        Automata afd = ConvertidorAFNDaAFD.convertir(automataOriginal);
+
+        System.out.println(" > Transformación a Autómata Finito Determinista completada.");
+        System.out.println(" > Estados resultantes tras aplicar subconjuntos: " + afd.getEstados().size());
+
+        // PASO 3
+        System.out.println("\n┌────────────────────────────────────────────────────────┐");
+        System.out.println("│ PASO 3: MINIMIZACIÓN DE ESTADOS (MYHILL-NERODE)        │");
+        System.out.println("└────────────────────────────────────────────────────────┘");
+
+        Automata minimizado = Minimizador.minimizar(afd);
+
+        System.out.println(" > Algoritmo de partición de equivalencia aplicado.");
+        System.out.println(" > El autómata ha sido optimizado a: " + minimizado.getEstados().size() + " estados.");
+
+        // PASO 4
+        System.out.println("\n┌────────────────────────────────────────────────────────┐");
+        System.out.println("│ PASO 4: GENERACIÓN DE MODELO VISUAL (GRAPHVIZ)         │");
+        System.out.println("└────────────────────────────────────────────────────────┘");
+        String nombreSalida = nombreArchivo + "minimizado";
+
+        EscritorGraphviz.generarArchivoDot(minimizado, nombreSalida);
+        EscritorGraphviz.mostrarGrafico(nombreSalida);
+
+        System.out.println(" > Archivo .dot generado y renderizado a .png.");
+        System.out.println(" > Imagen abierta en el visor del sistema.");
+        System.out.println("\n----------------------------------------------------------");
+
+        return minimizado;
     }
 }

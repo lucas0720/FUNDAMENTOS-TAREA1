@@ -15,15 +15,21 @@ public class LectorTXT {
     //Constructor
     private LectorTXT() {} 
 
-    //Singleton
+    //Singleton para que solo podamos tener una instancia
     private static LectorTXT instancia;
+
     public static LectorTXT getInstancia() {
         if (instancia == null) {
             instancia = new LectorTXT();
         }
         return instancia;
     }
-
+    
+    /**
+     * ----- METODO PRINCIPAL ----- leerAutomataDesdeArchivo
+     * 
+     * Lee el archivo .txt línea por línea y va clasificando la información según la letra inicial.
+     */
     public Automata leerAutomataDesdeArchivo(String rutaArchivo) {
 
         //DATOS DE UN AUTOMATA
@@ -43,6 +49,7 @@ public class LectorTXT {
         ){
             String linea;
 
+            // Mientras sigan existiendo líneas de texto en el archivo...
             while ((linea = lector.readLine()) != null) {
                 //Limpieza de linea
 
@@ -97,6 +104,7 @@ public class LectorTXT {
     private HashSet<String> procesarEstados(String linea, HashSet<String> estados) {
         String contenido = linea;
 
+        // Borramos lo que no necesitamos
         contenido = contenido.replace("k={", "");
         contenido = contenido.replace("}", "");
 
@@ -155,3 +163,9 @@ public class LectorTXT {
         return estadosFinales;
     }
 }
+/**
+ * 1. ==== CLASE ESTRUCTURA Y CONCEPTO =====
+ * Esta clase es la lectura de nuestro proyecto. Su única misión es tomar un archivo de texto plano
+ * que contiene la definición matemática de un autómata y convertir esas letras sueltas en verdaderos
+ * objetos Java nuestra clase Automata con los que el resto del programa pueda trabajar.
+ */
